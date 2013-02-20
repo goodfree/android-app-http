@@ -104,25 +104,10 @@ public class AsyncHttpResponseHandler {
 
     /**
      * Fired when a request returns successfully, override to handle in your own code
-     * @param content the body of the HTTP response from the server
-     */
-    public void onSuccess(String content) {}
-
-    /**
-     * Fired when a request returns successfully, override to handle in your own code
      * @param statusCode the status code of the response
      * @param content the body of the HTTP response from the server
      */
-    public void onSuccess(int statusCode, String content) {
-        onSuccess(content);
-    }
-
-    /**
-     * Fired when a request fails to complete, override to handle in your own code
-     * @param error the underlying cause of the failure
-     * @deprecated use {@link #onFailure(Throwable, String)}
-     */
-    public void onFailure(Throwable error) {}
+    public void onSuccess(int statusCode, byte[] byteData) {}
 
     /**
      * Fired when a request fails to complete, override to handle in your own code
@@ -131,23 +116,17 @@ public class AsyncHttpResponseHandler {
      */
     public void onFailure(Throwable error, String content) {
         // By default, call the deprecated onFailure(Throwable) for compatibility
-        onFailure(error);
     }
-
 
     //
     // Pre-processing of messages (executes in background threadpool thread)
     //
 
-    protected void sendSuccessMessage(int statusCode, String responseBody) {
-        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{new Integer(statusCode), responseBody}));
+    protected void sendSuccessMessage(int statusCode, byte[] byteData) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{Integer.valueOf(statusCode), byteData}));
     }
 
     protected void sendFailureMessage(Throwable e, String responseBody) {
-        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{e, responseBody}));
-    }
-    
-    protected void sendFailureMessage(Throwable e, byte[] responseBody) {
         sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{e, responseBody}));
     }
 
@@ -159,20 +138,17 @@ public class AsyncHttpResponseHandler {
         sendMessage(obtainMessage(FINISH_MESSAGE, null));
     }
 
-
     //
     // Pre-processing of messages (in original calling thread, typically the UI thread)
     //
 
-    protected void handleSuccessMessage(int statusCode, String responseBody) {
-        onSuccess(statusCode, responseBody);
+    protected void handleSuccessMessage(int statusCode, byte[] byteData) {
+        onSuccess(statusCode, byteData);
     }
 
     protected void handleFailureMessage(Throwable e, String responseBody) {
         onFailure(e, responseBody);
     }
-
-
 
     // Methods which emulate android's Handler and Message methods
     protected void handleMessage(Message msg) {
@@ -181,7 +157,7 @@ public class AsyncHttpResponseHandler {
         switch(msg.what) {
             case SUCCESS_MESSAGE:
                 response = (Object[])msg.obj;
-                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1]);
+                handleSuccessMessage(((Integer) response[0]).intValue(), (byte[]) response[1]);
                 break;
             case FAILURE_MESSAGE:
                 response = (Object[])msg.obj;
@@ -219,20 +195,20 @@ public class AsyncHttpResponseHandler {
     // Interface to AsyncHttpRequest
     void sendResponseMessage(HttpResponse response) {
         StatusLine status = response.getStatusLine();
-        String responseBody = null;
+        byte[] responseBody = null;
         try {
             HttpEntity entity = null;
             HttpEntity temp = response.getEntity();
             if(temp != null) {
                 entity = new BufferedHttpEntity(temp);
-                responseBody = EntityUtils.toString(entity, "UTF-8");
+                responseBody = EntityUtils.toByteArray(entity);
             }
         } catch(IOException e) {
-            sendFailureMessage(e, (String) null);
+            sendFailureMessage(e, null);
         }
 
         if(status.getStatusCode() >= 300) {
-            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), "server response error");
         } else {
             sendSuccessMessage(status.getStatusCode(), responseBody);
         }

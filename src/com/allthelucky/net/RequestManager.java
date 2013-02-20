@@ -13,7 +13,7 @@ import android.content.Context;
 import android.text.TextUtils;
 
 import com.loopj.android.http.AsyncHttpClient;
-import com.loopj.android.http.BinaryHttpResponseHandler;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 public class RequestManager {
@@ -45,7 +45,7 @@ public class RequestManager {
      * @param actionId
      */
     public void post(Context context, String url, RequestParams params, RequestListener requestListener, int actionId) {
-        asyncHttpClient.post(context, url, params, new RequestBinaryHttpResponseHandler(requestListener, actionId));
+        asyncHttpClient.post(context, url, params, new RequeseHttpResponseHandler(requestListener, actionId));
     }
 
     /**
@@ -59,7 +59,7 @@ public class RequestManager {
      */
     public void post(Context context, String url, JSONObject params, RequestListener requestListener, int actionId) {
         asyncHttpClient.post(context, url, rpcToEntity(params.toString(), "application/json"), "application/json",
-                new RequestBinaryHttpResponseHandler(requestListener, actionId));
+                new RequeseHttpResponseHandler(requestListener, actionId));
     }
 
     /**
@@ -75,7 +75,7 @@ public class RequestManager {
     public void post(Context context, String url, Header[] headers, JSONObject params, RequestListener requestListener,
             int actionId) {
         asyncHttpClient.post(context, url, headers, rpcToEntity(params.toString(), "application/json"),
-                "application/json", new RequestBinaryHttpResponseHandler(requestListener, actionId));
+                "application/json", new RequeseHttpResponseHandler(requestListener, actionId));
     }
 
     /**
@@ -89,7 +89,7 @@ public class RequestManager {
      */
     public void post(Context context, String url, String params, RequestListener requestListener, int actionId) {
         asyncHttpClient.post(context, url, rpcToEntity(params, "application/xml"), "application/xml",
-                new RequestBinaryHttpResponseHandler(requestListener, actionId));
+                new RequeseHttpResponseHandler(requestListener, actionId));
     }
 
     /**
@@ -105,11 +105,11 @@ public class RequestManager {
     public void post(Context context, String url, Header[] headers, String params, RequestListener requestListener,
             int actionId) {
         asyncHttpClient.post(context, url, headers, rpcToEntity(params, "application/xml"), "application/xml",
-                new RequestBinaryHttpResponseHandler(requestListener, actionId));
+                new RequeseHttpResponseHandler(requestListener, actionId));
     }
 
     public void get(Context context, String url, RequestListener requestListener, int actionId) {
-        asyncHttpClient.get(context, url, new RequestBinaryHttpResponseHandler(requestListener, actionId));
+        asyncHttpClient.get(context, url, new RequeseHttpResponseHandler(requestListener, actionId));
     }
 
     /**
@@ -132,11 +132,11 @@ public class RequestManager {
         return entity;
     }
 
-    final class RequestBinaryHttpResponseHandler extends BinaryHttpResponseHandler {
+    final class RequeseHttpResponseHandler extends AsyncHttpResponseHandler {
         private RequestListener requestListener;
         private int actionId;
 
-        public RequestBinaryHttpResponseHandler(RequestListener requestListener, int actionId) {
+        public RequeseHttpResponseHandler(RequestListener requestListener, int actionId) {
             this.requestListener = requestListener;
             this.actionId = actionId;
         }
@@ -146,7 +146,7 @@ public class RequestManager {
             super.onStart();
             requestListener.onStart();
         }
-        
+
         @Override
         public void onFinish() {
             super.onFinish();
@@ -155,13 +155,13 @@ public class RequestManager {
         @Override
         public void onSuccess(int statusCode, byte[] binaryData) {
             super.onSuccess(statusCode, binaryData);
-            requestListener.onCompleted(binaryData, RequestListener.OK, actionId);
+            requestListener.onCompleted(binaryData, RequestListener.OK, "server response ok", actionId);
         }
 
         @Override
         public void onFailure(Throwable error, String content) {
             super.onFailure(error, content);
-            requestListener.onCompleted(null, RequestListener.ERR, actionId);
+            requestListener.onCompleted(null, RequestListener.ERR, content, actionId);
         }
     }
 }

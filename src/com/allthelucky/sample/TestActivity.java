@@ -9,20 +9,38 @@ import com.allthelucky.net.RequestManager;
 import android.app.Activity;
 import android.os.Bundle;
 
-public class TestActivity  extends Activity{
+public class TestActivity extends Activity {
+    RequestManager requestManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        RequestListener requestListener=new RequestListener() {
+        testJSONObjectRequest();
+        testXMLRequest();
+        requestManager = RequestManager.getInstance();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        if (requestManager != null) {
+            requestManager.cancel(TestActivity.this);
+        }
+    }
+
+    private void testJSONObjectRequest() {
+        RequestListener requestListener = new RequestListener() {
             @Override
             public void onStart() {
-                
+
             }
-            
+
             @Override
-            public void onCompleted(byte[] data, int statusCode, int actionId) {
+            public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
                 System.out.println("=====================");
-                if(RequestListener.ERR!=statusCode) {
+                System.out.println(description);
+
+                if (RequestListener.ERR != statusCode) {
                     String result = new String(data);
                     System.out.println(result);
                 }
@@ -44,10 +62,33 @@ public class TestActivity  extends Activity{
         } catch (JSONException e) {
             e.printStackTrace();
         }
-            
-        RequestManager.getInstance().get(TestActivity.this, url, requestListener, 0);
+        RequestManager.getInstance().post(TestActivity.this, url, root, requestListener, 0);
     }
-    
+
+    private void testXMLRequest() {
+        final String url = "http://tcopenapitest.17usoft.com/handlers/General/creditcardhandler.ashx";
+        final String params = "<?xml version=\"1.0\" encoding=\"utf-8\"?><request><header><accountID>f94a3630-567d-414a-90f6-affc27856467</accountID><digitalSign>565241e17eb9ef582d9b45ab1a718392</digitalSign><reqTime>2012-11-13 09:56:02.595</reqTime><serviceName>GetHotelList</serviceName><version>20111128102912</version></header><body><cityId>395</cityId><searchFields>hotelName,address</searchFields><pageSize>10</pageSize><cs>2</cs><page>1</page><sortType>1</sortType><radius>5000</radius><clientIp>27.17.16.174</clientIp><comeDate>2012-11-13</comeDate><leaveDate>2012-11-14</leaveDate></body></request>";
+
+        RequestListener requestListener = new RequestListener() {
+            @Override
+            public void onStart() {
+
+            }
+
+            @Override
+            public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
+                System.out.println("=====================");
+                System.out.println(description);
+
+                if (RequestListener.ERR != statusCode) {
+                    String result = new String(data);
+                    System.out.println(result);
+                }
+            }
+        };
+        RequestManager.getInstance().post(TestActivity.this, url, params, requestListener, 0);
+    }
+
     private static JSONObject getInvoker() throws JSONException {
         JSONObject invoker = new JSONObject();
         invoker.put("CSN", "2931F2761086E59E0100");
@@ -57,6 +98,5 @@ public class TestActivity  extends Activity{
         invoker.put("OSDESCRIPT", "w480h800");
         return invoker;
     }
-    
-    
+
 }
