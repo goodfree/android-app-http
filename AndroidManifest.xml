@@ -6,7 +6,7 @@
 
     <application  android:label="http">
         <activity
-            android:name="com.allthelucky.sample.TestActivity"
+            android:name="com.allthelucky.net.sample.TestActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="http"
             android:screenOrientation="portrait"

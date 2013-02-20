@@ -1,4 +1,4 @@
-package com.allthelucky.sample;
+package com.allthelucky.net.sample;
 
 import org.json.JSONException;
 import org.json.JSONObject;
