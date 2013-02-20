@@ -24,7 +24,7 @@ public class TestActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestManager = RequestManager.getInstance();
-
+        testHttpsRequest();
         testParamsListRequest();
         testJSONObjectRequest();
         testXMLRequest();
@@ -32,7 +32,7 @@ public class TestActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (this.requestManager != null) {//取消请求
+        if (this.requestManager != null) {// 取消请求
             this.requestManager.cancel(TestActivity.this);
         }
         super.onBackPressed();
@@ -52,6 +52,11 @@ public class TestActivity extends Activity {
             }
         }
     };
+
+    private void testHttpsRequest() {
+        final String url = "https://github.com";
+        requestManager.get(TestActivity.this, url , requestListener, -1);
+    }
 
     /**
      * 参数列表请求
