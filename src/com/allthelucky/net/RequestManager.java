@@ -16,6 +16,12 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
+/**
+ * Request Manager based on AsyncHttpClient
+ * 
+ * @author savant
+ * 
+ */
 public class RequestManager {
     private final AsyncHttpClient asyncHttpClient;
     private static RequestManager INSTANCE = null;
