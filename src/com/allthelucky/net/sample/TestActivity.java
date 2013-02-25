@@ -8,7 +8,6 @@ import com.allthelucky.net.RequestListener;
 import com.allthelucky.net.RequestManager;
 import com.loopj.android.http.RequestParams;
 
-import android.app.Activity;
 import android.os.Bundle;
 
 /**
@@ -17,7 +16,7 @@ import android.os.Bundle;
  * @author savant
  * 
  */
-public class TestActivity extends Activity {
+public class TestActivity extends BaseActivity {
     private RequestManager requestManager;
 
     @Override
