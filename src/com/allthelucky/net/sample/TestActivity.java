@@ -9,6 +9,7 @@ import com.allthelucky.net.RequestManager;
 import com.loopj.android.http.RequestParams;
 
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 
 /**
  * 网络请求测试
@@ -23,11 +24,15 @@ public class TestActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.requestManager = RequestManager.getInstance();
+        testGetCache();
         testHttpsRequest();
         testParamsListRequest();
         testJSONObjectRequest();
         testXMLRequest();
+        TextToSpeech tts = new TextToSpeech(this, null);  ;  
+        tts.speak("测试一下", TextToSpeech.QUEUE_FLUSH, null);  
     }
+
 
     @Override
     public void onBackPressed() {
@@ -51,7 +56,12 @@ public class TestActivity extends BaseActivity {
             }
         }
     };
-
+    
+    private void testGetCache() {
+        final String url = "http://www.baidu.com/img/shouye_b5486898c692066bd2cbaeda86d74448.gif";
+        requestManager.get(TestActivity.this, url , requestListener, true, -2); 
+    }
+    
     private void testHttpsRequest() {
         final String url = "https://github.com";
         requestManager.get(TestActivity.this, url , requestListener, -1);
