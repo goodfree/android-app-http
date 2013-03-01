@@ -29,8 +29,6 @@ public class TestActivity extends BaseActivity {
         testParamsListRequest();
         testJSONObjectRequest();
         testXMLRequest();
-        TextToSpeech tts = new TextToSpeech(this, null);  ;  
-        tts.speak("测试一下", TextToSpeech.QUEUE_FLUSH, null);  
     }
 
 
@@ -52,13 +50,13 @@ public class TestActivity extends BaseActivity {
         public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
             System.out.println("==========" + actionId + ":" + description + "===========");
             if (RequestListener.ERR != statusCode) {
-                System.out.println("result:" + ApplicationUtils.bytesToString(data));
+                //System.out.println("result:" + ApplicationUtils.bytesToString(data));
             }
         }
     };
     
     private void testGetCache() {
-        final String url = "http://www.baidu.com/img/shouye_b5486898c692066bd2cbaeda86d74448.gif";
+        final String url = "http://www.winfirm.net/helloworld.html";
         requestManager.get(TestActivity.this, url , requestListener, true, -2); 
     }
     
