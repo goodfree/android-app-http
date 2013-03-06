@@ -89,7 +89,7 @@ public class WebImageView extends ImageView {
                     BitmapFactory.Options options = new Options();
                     options.inDither = false; /* 不进行图片抖动处理 */
                     options.inPreferredConfig = null; /* 设置让解码器以最佳方式解码 */
-                    options.inSampleSize = 1; /* 图片长宽方向缩小倍数 */
+                    options.inSampleSize = 2; /* 图片长宽方向缩小倍数 */
                     options.inPreferredConfig = Bitmap.Config.RGB_565;
                     options.inJustDecodeBounds = false;
                     Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);

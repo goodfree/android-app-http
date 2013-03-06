@@ -1,15 +1,24 @@
 package com.allthelucky.net.sample;
 
+import java.util.ArrayList;
+import java.util.WeakHashMap;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.allthelucky.net.ApplicationUtils;
+import android.content.Context;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import com.allthelucky.R;
 import com.allthelucky.net.RequestListener;
 import com.allthelucky.net.RequestManager;
+import com.allthelucky.net.WebImageView;
 import com.loopj.android.http.RequestParams;
-
-import android.os.Bundle;
-import android.speech.tts.TextToSpeech;
 
 /**
  * 网络请求测试
@@ -23,7 +32,10 @@ public class TestActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
         this.requestManager = RequestManager.getInstance();
+
+        steListView();
         testGetCache();
         testHttpsRequest();
         testParamsListRequest();
@@ -31,6 +43,46 @@ public class TestActivity extends BaseActivity {
         testXMLRequest();
     }
 
+    private void steListView() {
+        ListView lv = (ListView) findViewById(R.id.listView1);
+        ArrayList<String> list = new ArrayList<String>();
+        list.add("http://i1.dpfile.com/s/i/app/api/images/dp-logo.797f3f7b8918e305370e7c049af1089c.png");
+        list.add("http://i3.dpfile.com/s/i/app/api/images/dp-logo1.1e0b679b006c0620a33349a7cdf92a6b.png");
+        list.add("http://i2.dpfile.com/s/i/app/api/images/app-logo1.7db1d07c60b54c8434da19c57acaa567.png");
+        list.add("http://i2.dpfile.com/s/i/app/api/images/accr-logo3.38af0ad2ec67a5b7062d36b800b80b48.png");
+        list.add("http://i3.dpfile.com/s/i/app/api/images/accr-logo4.4373ec1313563fbd92cb037f86ac5cae.png");
+        list.add("http://i2.dpfile.com/s/i/app/api/images/brandstst.84014d9d118d22e8a76cd6e1ca5c7e13.png");
+        list.add("http://www.baidu.com/img/shouye_b5486898c692066bd2cbaeda86d74448.gif");
+        list.add("http://www.winfirm.net/uploadfile/small/201112212124444097/340x292.jpg");
+        list.add("http://www.winfirm.net/uploadfile/201006/11/2141588505.jpg");
+        lv.setAdapter(new ImageAdapter(this, list));
+    }
+
+    class ImageAdapter extends ArrayAdapter<String> {
+        private Context context;
+        private WeakHashMap<Integer, View> map;
+
+        public ImageAdapter(Context context, ArrayList<String> list) {
+            super(context, 0, list);
+            this.context = context;
+            this.map= new WeakHashMap<Integer, View>();
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+          final  String url =  getItem(position);
+            convertView = map.get(position);
+            if(convertView!=null) {
+                return convertView;
+            } else {
+                View v =  LayoutInflater.from(context).inflate(R.layout.image, null);
+                WebImageView imageView = (WebImageView) v.findViewById(R.id.imageView1);
+                imageView.setURLAsync(url);  
+                map.put(position, v);
+                return v;
+            }
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -50,19 +102,20 @@ public class TestActivity extends BaseActivity {
         public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
             System.out.println("==========" + actionId + ":" + description + "===========");
             if (RequestListener.ERR != statusCode) {
-                //System.out.println("result:" + ApplicationUtils.bytesToString(data));
+                // System.out.println("result:" +
+                // ApplicationUtils.bytesToString(data));
             }
         }
     };
-    
+
     private void testGetCache() {
         final String url = "http://www.winfirm.net/helloworld.html";
-        requestManager.get(TestActivity.this, url , requestListener, true, -2); 
+        requestManager.get(TestActivity.this, url, requestListener, true, -2);
     }
-    
+
     private void testHttpsRequest() {
         final String url = "https://github.com";
-        requestManager.get(TestActivity.this, url , requestListener, -1);
+        requestManager.get(TestActivity.this, url, requestListener, -1);
     }
 
     /**
