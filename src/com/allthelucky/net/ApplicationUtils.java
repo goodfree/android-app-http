@@ -22,23 +22,14 @@ public class ApplicationUtils {
      * 字节码数据 转 字符串工具
      */
     public static String bytesToString(byte[] data) {
-        String ret = null;
+        if (data == null)
+            return null;
         try {
-            ret = new String(data, "utf-8");
+            return new String(data, "utf-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
+            return null;
         }
-        return ret;
-    }
-
-    /**
-     * 字节码数据(字符)转JSONObject JSONObject
-     * 
-     * @param data
-     * @return
-     */
-    public static JSONObject bytesToJSONObject(byte[] data) {
-        return stringToJSONObject(bytesToString(data));
     }
 
     /**
@@ -48,12 +39,26 @@ public class ApplicationUtils {
      * @return
      */
     public static JSONObject stringToJSONObject(String json) {
+        if (json == null)
+            return null;
         try {
             return new JSONObject(json);
         } catch (JSONException e) {
             e.printStackTrace();
-            return new JSONObject();
+            return null;
         }
+    }
+
+    /**
+     * 字节码数据(字符)转JSONObject JSONObject
+     * 
+     * @param data
+     * @return
+     */
+    public static JSONObject bytesToJSONObject(byte[] data) {
+        if (data == null)
+            return null;
+        return stringToJSONObject(bytesToString(data));
     }
 
     /**
@@ -70,7 +75,7 @@ public class ApplicationUtils {
         }
         return false;
     }
-    
+
     /**
      * 16位MD5
      */
@@ -112,7 +117,8 @@ public class ApplicationUtils {
         }
         for (int i = 0; i < utfBuf.length; i++) {
             c = utfBuf[i];
-            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c == '.' || c == '-' || c == '*' || c == '_')
+            if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+                    || (c == '.' || c == '-' || c == '*' || c == '_')
                     || (c == ':' || c == '/' || c == '=' || c == '?' || c == '&' || c == '%')) {
                 buf.append((char) c);
             } else {
