@@ -55,7 +55,7 @@ public class WebImageView extends ImageView {
      *            The URL of an image
      */
     public void setURLAsync(String url) {
-        setURLAsync(url, R.drawable.ic_menu_help);
+        setURLAsync(url, R.drawable.ic_btn_speak_now);
     }
 
     /**
@@ -75,6 +75,7 @@ public class WebImageView extends ImageView {
 
         public ImageRequestListener(String url, int defaultImage) {
             this.url = url;
+            this.defaultImage = defaultImage;
         }
 
         @Override
