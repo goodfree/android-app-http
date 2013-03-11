@@ -178,12 +178,20 @@ public class RequestManager {
         } else {
             final SharedPreferences pref = context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE);
             final String fileName = ApplicationUtils.encryptMD5(url);
-            final long lastModified = getLastModified(url);
-            if (lastModified != -1 && lastModified != pref.getLong(fileName, 0l)) {
-                loadAndSaveResource(context, url, requestListener, lastModified, actionId);
-            } else {
-                loadCache(context, url, requestListener, actionId);
-            }
+            new AsyncTask<Void, Void, Long>() {
+                @Override
+                protected Long doInBackground(Void... params) {
+                    return getLastModified(url);
+                }
+
+                protected void onPostExecute(Long result) {
+                    if (result != -1 && result != pref.getLong(fileName, 0l)) {
+                        loadAndSaveResource(context, url, requestListener, result, actionId);
+                    } else {
+                        loadCache(context, url, requestListener, actionId);
+                    }
+                }
+            }.execute();
         }
     }
 
