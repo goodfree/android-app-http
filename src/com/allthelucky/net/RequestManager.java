@@ -266,7 +266,6 @@ public class RequestManager {
             context.openFileInput(ApplicationUtils.encryptMD5(url));
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
             return false;
         }
     }
