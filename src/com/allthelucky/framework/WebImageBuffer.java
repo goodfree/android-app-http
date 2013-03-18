@@ -1,10 +1,10 @@
-package com.allthelucky.net;
+package com.allthelucky.framework;
 
 import java.util.HashMap;
 
 import android.graphics.Bitmap;
 
-public class WebImageUtils {
+public class WebImageBuffer {
     private final static HashMap<String, Bitmap> caches = new HashMap<String, Bitmap>();
 
     public synchronized static Bitmap get(String url) {

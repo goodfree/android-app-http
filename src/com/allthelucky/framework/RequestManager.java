@@ -1,4 +1,4 @@
-package com.allthelucky.net;
+package com.allthelucky.framework;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

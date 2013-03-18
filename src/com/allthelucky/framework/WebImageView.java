@@ -1,4 +1,4 @@
-package com.allthelucky.net;
+package com.allthelucky.framework;
 
 import android.R;
 import android.content.Context;
@@ -96,15 +96,15 @@ public class WebImageView extends ImageView {
                     Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                     if (bitmap != null) {
                         setImageBitmap(bitmap);
-                        WebImageUtils.put(url, bitmap);
+                        WebImageBuffer.put(url, bitmap);
                     } else {
-                        bitmap = WebImageUtils.get(url);
+                        bitmap = WebImageBuffer.get(url);
                         if (null != bitmap) {
                             setImageBitmap(bitmap);
                         }
                     }
                 } else {
-                    Bitmap bitmap = WebImageUtils.get(url);
+                    Bitmap bitmap = WebImageBuffer.get(url);
                     if (bitmap == null) {
                         setImageDrawable(getResources().getDrawable(defaultImage));
                     } else {
