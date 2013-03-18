@@ -146,7 +146,7 @@ public class RequestManager {
      * @param actionId
      */
     public void get(Context context, String url, RequestListener requestListener, boolean cache, int actionId) {
-        final String encodeUrl = ApplicationUtils.urlEncode(url);
+        final String encodeUrl = BaseUtils.urlEncode(url);
         if (!cache) {
             asyncHttpClient.get(context, url, new HttpRequestListener(requestListener, actionId));
         } else {
@@ -154,7 +154,7 @@ public class RequestManager {
                 loadAndSaveResource(context, encodeUrl, requestListener, 0l, actionId);
             } else {
                 loadCache(context, encodeUrl, requestListener, actionId);
-                if (!ApplicationUtils.hasNetwork(context)) {
+                if (!BaseUtils.hasNetwork(context)) {
                     return;
                 } else {
                     checkUpdate(context, encodeUrl, actionId);
@@ -186,7 +186,7 @@ public class RequestManager {
      */
     private void checkUpdate(final Context context, final String url, final int actionId) {
         final SharedPreferences pref = context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE);
-        final String fileName = ApplicationUtils.encryptMD5(url);
+        final String fileName = BaseUtils.encryptMD5(url);
         new AsyncTask<Void, Void, Long>() {
             @Override
             protected Long doInBackground(Void... params) {
@@ -233,7 +233,7 @@ public class RequestManager {
             @Override
             protected byte[] doInBackground(Void... params) {
                 try {
-                    InputStream is = context.openFileInput(ApplicationUtils.encryptMD5(url));
+                    InputStream is = context.openFileInput(BaseUtils.encryptMD5(url));
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     byte[] bytes = new byte[4096];
                     int len = 0;
@@ -262,7 +262,7 @@ public class RequestManager {
      */
     private boolean hasCache(Context context, String url) {
         try {
-            context.openFileInput(ApplicationUtils.encryptMD5(url));
+            context.openFileInput(BaseUtils.encryptMD5(url));
             return true;
         } catch (Exception e) {
             return false;
@@ -328,7 +328,7 @@ public class RequestManager {
         private void saveCache(Context context, String url, byte[] data) {
             try {
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-                FileOutputStream os = context.openFileOutput(ApplicationUtils.encryptMD5(url), Context.MODE_PRIVATE);
+                FileOutputStream os = context.openFileOutput(BaseUtils.encryptMD5(url), Context.MODE_PRIVATE);
 
                 byte[] buffer = new byte[1024];
                 int len = 0;
@@ -349,7 +349,7 @@ public class RequestManager {
 
         private void saveLastModified() {
             context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE).edit()
-                    .putLong(ApplicationUtils.encryptMD5(url), lastModified).commit();
+                    .putLong(BaseUtils.encryptMD5(url), lastModified).commit();
         }
     }
 

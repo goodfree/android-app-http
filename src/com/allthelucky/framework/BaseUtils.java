@@ -16,7 +16,7 @@ import android.net.NetworkInfo;
  * @author savant
  * 
  */
-public class ApplicationUtils {
+public class BaseUtils {
 
     /**
      * 字节码数据 转 字符串工具
