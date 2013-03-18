@@ -55,7 +55,7 @@ public class WebImageView extends ImageView {
      *            The URL of an image
      */
     public void setURLAsync(String url) {
-        setURLAsync(url, R.drawable.ic_btn_speak_now);
+        setURLAsync(url, android.R.drawable.btn_default);
     }
 
     /**
