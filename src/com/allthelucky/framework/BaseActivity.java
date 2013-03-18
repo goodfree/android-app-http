@@ -9,6 +9,12 @@ import android.view.KeyEvent;
 import android.view.Window;
 import android.widget.Toast;
 
+/**
+ * base activity with dialog
+ * 
+ * @author savant
+ * 
+ */
 public class BaseActivity extends Activity {
 
 	private ProgressDialog progressDialog;
