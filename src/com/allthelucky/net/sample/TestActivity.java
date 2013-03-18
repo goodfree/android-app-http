@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.allthelucky.R;
+import com.allthelucky.net.ApplicationUtils;
 import com.allthelucky.net.RequestListener;
 import com.allthelucky.net.RequestManager;
 import com.allthelucky.net.WebImageView;
@@ -102,8 +103,7 @@ public class TestActivity extends BaseActivity {
         public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
             System.out.println("==========" + actionId + ":" + description + "===========");
             if (RequestListener.ERR != statusCode) {
-                // System.out.println("result:" +
-                // ApplicationUtils.bytesToString(data));
+				System.out.println("result:" + ApplicationUtils.bytesToString(data));
             }
         }
     };
