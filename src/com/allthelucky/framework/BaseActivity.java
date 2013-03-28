@@ -2,10 +2,7 @@ package com.allthelucky.framework;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnKeyListener;
 import android.os.Bundle;
-import android.view.KeyEvent;
 import android.view.Window;
 import android.widget.Toast;
 
@@ -28,22 +25,12 @@ public class BaseActivity extends Activity {
 	public void showDialog() {
 		if (null == progressDialog) {
 			progressDialog = ProgressDialog.show(BaseActivity.this, "", "正在加载，请稍候...");
-			progressDialog.setCancelable(false);
+			progressDialog.setCancelable(true);
+			progressDialog.setCanceledOnTouchOutside(false);
 		} else {
 			progressDialog.show();
 		}
-		progressDialog.setOnKeyListener(onKeyListener);
 	}
-
-	private OnKeyListener onKeyListener = new OnKeyListener() {
-		@Override
-		public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-			if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
-				dismissDialog();
-			}
-			return false;
-		}
-	};
 
 	public void dismissDialog() {
 		if (isFinishing()) {
