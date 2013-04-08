@@ -14,7 +14,7 @@ import android.widget.Toast;
  */
 public class BaseActivity extends Activity {
 
-	private ProgressDialog progressDialog;
+	private ProgressDialog progressDialog=null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -23,9 +23,17 @@ public class BaseActivity extends Activity {
 	}
 
 	public void showDialog() {
+		showDialog("正在加载，请稍候...", true);
+	}
+
+	public void showDialog(String message) {
+		showDialog(message, true);
+	}
+
+	public void showDialog(String message, boolean cancel) {
 		if (null == progressDialog) {
 			progressDialog = ProgressDialog.show(BaseActivity.this, "", "正在加载，请稍候...");
-			progressDialog.setCancelable(true);
+			progressDialog.setCancelable(cancel);
 			progressDialog.setCanceledOnTouchOutside(false);
 		} else {
 			progressDialog.show();
