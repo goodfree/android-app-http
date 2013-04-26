@@ -280,7 +280,7 @@ public class RequestManager {
         StringEntity entity = null;
         if (!TextUtils.isEmpty(params)) {
             try {
-                entity = new StringEntity(params);
+                entity = new StringEntity(params, HTTP.UTF_8);
                 entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, contentType));
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
