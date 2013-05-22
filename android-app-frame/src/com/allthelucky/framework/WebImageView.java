@@ -1,4 +1,4 @@
-package com.allthelucky.common;
+package com.allthelucky.framework;
 
 import java.util.HashMap;
 
@@ -10,6 +10,9 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.webkit.WebSettings;
 import android.widget.ImageView;
+
+import com.allthelucky.common.RequestListener;
+import com.allthelucky.common.RequestManager;
 
 /**
  * ImageView with a network image RequestManager

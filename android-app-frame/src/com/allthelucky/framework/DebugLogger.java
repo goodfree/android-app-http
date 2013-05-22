@@ -1,4 +1,4 @@
-package com.allthelucky.common;
+package com.allthelucky.framework;
 
 /**
  * @description: overide Log utils
