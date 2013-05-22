@@ -1,12 +1,12 @@
-package com.allthelucky.framework;
+package com.allthelucky.common;
 
 /**
  * @description: overide Log utils
  * 
- * @author pxw(www.allthelucky.com)
+ * @author savant-pan
  * 
  */
-public final class Log {
+public final class DebugLogger {
 
 	private static boolean mDebug = false;
 
