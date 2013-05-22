@@ -3,7 +3,7 @@ package com.allthelucky.common;
 /**
  * Request Listener for AsyncHttpResponseHandler
  * 
- * @author savant
+ * @author savant-pan
  * 
  */
 public interface RequestListener {

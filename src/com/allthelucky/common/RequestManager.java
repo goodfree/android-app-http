@@ -32,7 +32,7 @@ import com.loopj.android.http.RequestParams;
 /**
  * Request Manager based on AsyncHttpClient
  * 
- * @author savant
+ * @author savant-pan
  * 
  */
 public class RequestManager {
