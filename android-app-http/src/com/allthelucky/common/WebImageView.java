@@ -1,4 +1,4 @@
-package com.allthelucky.framework;
+package com.allthelucky.common;
 
 import java.util.HashMap;
 
