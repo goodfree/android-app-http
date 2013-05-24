@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 透明色 -->
+    <color name="transparent">#00000000</color>
+
+    <!-- 黑色 -->
+    <color name="black">#ff000000</color>
+
+    <!-- 灰色 -->
+    <color name="gray">#ff888888</color>
+
+    <!-- 深灰色 -->
+    <color name="dkgray">#ffff4444</color>
+
+    <!-- 浅灰色 -->
+    <color name="ltgray">#ffcccccc</color>
+
+    <!-- 白色 -->
+    <color name="white">#ffffffff</color>
+
+    <!-- 红色 -->
+    <color name="red">#ffff0000</color>
+
+    <!-- 绿色 -->
+    <color name="green">#ff00ff00</color>
+
+    <!-- 蓝色 -->
+    <color name="blue">#ff0000ff</color>
+
+    <!-- 黄色 -->
+    <color name="yellow">#ffffff00</color>
+
+    <!-- 青色 -->
+    <color name="cyan">#ff00ffff</color>
+
+    <!-- 粉色 -->
+    <color name="magenta">#ff888888</color>
+
+     <!-- 标题背景 -->
+    <color name="titlebar">#2181cb</color>
+    
+    <!-- 布局背景 -->
+    <color name="bg">#ffffffff</color>
+
+    <!-- 深黑，常用文字颜色 -->
+    <color name="title">#ff333333</color>
+
+    <!-- 灰色，常用浅色文字颜色 -->
+    <color name="content">#ff999999</color>
+
+    <!-- 浅灰，常用list风格分隔线条颜色 -->
+    <color name="divider">#e6e6e6</color>
+
+    <!-- 对话框，Indicator分隔线 -->
+    <color name="frame">#61a716</color>
+
+</resources>
