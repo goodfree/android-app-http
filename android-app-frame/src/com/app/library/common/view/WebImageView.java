@@ -2,6 +2,9 @@ package com.app.library.common.view;
 
 import java.util.HashMap;
 
+import com.app.library.common.manager.RequestListener;
+import com.app.library.common.manager.RequestManager;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,9 +13,6 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.webkit.WebSettings;
 import android.widget.ImageView;
-
-import com.allthelucky.common.RequestListener;
-import com.allthelucky.common.RequestManager;
 
 /**
  * ImageView with a network image RequestManager
