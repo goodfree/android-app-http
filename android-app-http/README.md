@@ -1,4 +1,4 @@
-Asynchronous HTTP Library for myself.
+A fork project.
 
 This project, used as android-app-framwork's http library, which is based on Asynchronous HTTP Library for Android.
 
