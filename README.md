@@ -1,7 +1,7 @@
-A fork project.
+An improved Android Asynchronous HTTP Library easy to use!
 ====================
 
-This project, used as android-app-framwork's http library, which is based on Asynchronous HTTP Library for Android.
+This project, used as android-app-framwork's http library, which based on Asynchronous HTTP Library for Android.
 
 1.android-app-framwork
 https://github.com/allthelucky/android-app-framwork 
