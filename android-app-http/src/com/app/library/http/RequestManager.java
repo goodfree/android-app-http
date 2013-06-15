@@ -153,9 +153,9 @@ public class RequestManager {
 	 * @param actionId
 	 */
 	public void get(Context context, String url, RequestListener requestListener, int actionId) {
-		get(context, url, requestListener, false, actionId);
+		get(context, url, null, requestListener, false, actionId);
 	}
-
+	
 	/**
 	 * get数据
 	 * 
@@ -165,10 +165,10 @@ public class RequestManager {
 	 * @param cache
 	 * @param actionId
 	 */
-	public void get(Context context, String url, RequestListener requestListener, boolean cache, int actionId) {
+	public void get(Context context, String url, RequestParams params, RequestListener requestListener, boolean cache, int actionId) {
 		final String encodeUrl = urlEncode(url);
 		if (!cache) {
-			asyncHttpClient.get(context, url, new HttpRequestListener(requestListener, actionId));
+			asyncHttpClient.get(context, url, params, new HttpRequestListener(requestListener, actionId));
 		} else {
 			if (!hasCache(context, encodeUrl)) {
 				loadAndSaveResource(context, encodeUrl, requestListener, 0l, actionId);

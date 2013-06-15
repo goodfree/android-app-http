@@ -105,7 +105,7 @@ public class WebImageView extends ImageView {
 		if (TextUtils.isEmpty(imageUrl)) {
 			this.setDefaultImage();
 		} else {
-			RequestManager.getInstance().get(getContext(), imageUrl, requestListener, true, 0);
+			RequestManager.getInstance().get(getContext(), imageUrl, null,requestListener, true, 0);
 		}
 	}
 
