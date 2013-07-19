@@ -14,13 +14,13 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-*/
+ */
 
 package com.loopj.android.http;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import java.io.IOException;
+
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -28,189 +28,175 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.util.EntityUtils;
 
-import java.io.IOException;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 
 /**
- * Used to intercept and handle the responses from requests made using 
- * {@link AsyncHttpClient}. The {@link #onSuccess(String)} method is 
- * designed to be anonymously overridden with your own response handling code.
+ * Used to intercept and handle the responses from requests made using
+ * {@link AsyncHttpClient}. The {@link #onSuccess(String)} method is designed to
+ * be anonymously overridden with your own response handling code.
  * <p>
  * Additionally, you can override the {@link #onFailure(Throwable, String)},
  * {@link #onStart()}, and {@link #onFinish()} methods as required.
  * <p>
  * For example:
  * <p>
+ * 
  * <pre>
  * AsyncHttpClient client = new AsyncHttpClient();
- * client.get("http://www.google.com", new AsyncHttpResponseHandler() {
- *     &#064;Override
- *     public void onStart() {
- *         // Initiated the request
- *     }
- *
- *     &#064;Override
- *     public void onSuccess(String response) {
- *         // Successfully got a response
- *     }
+ * client.get(&quot;http://www.google.com&quot;, new AsyncHttpResponseHandler() {
+ * 	&#064;Override
+ * 	public void onStart() {
+ * 		// Initiated the request
+ * 	}
  * 
- *     &#064;Override
- *     public void onFailure(Throwable e, String response) {
- *         // Response failed :(
- *     }
- *
- *     &#064;Override
- *     public void onFinish() {
- *         // Completed the request (either success or failure)
- *     }
+ * 	&#064;Override
+ * 	public void onSuccess(String response) {
+ * 		// Successfully got a response
+ * 	}
+ * 
+ * 	&#064;Override
+ * 	public void onFailure(Throwable e, String response) {
+ * 		// Response failed :(
+ * 	}
+ * 
+ * 	&#064;Override
+ * 	public void onFinish() {
+ * 		// Completed the request (either success or failure)
+ * 	}
  * });
  * </pre>
  */
 public class AsyncHttpResponseHandler {
-    protected static final int SUCCESS_MESSAGE = 0;
-    protected static final int FAILURE_MESSAGE = 1;
-    protected static final int START_MESSAGE = 2;
-    protected static final int FINISH_MESSAGE = 3;
+	protected static final int SUCCESS_MESSAGE = 0;
+	protected static final int FAILURE_MESSAGE = 1;
+	protected static final int START_MESSAGE = 2;
+	protected static final int FINISH_MESSAGE = 3;
 
-    private Handler handler;
+	private Handler handler;
 
-    /**
-     * Creates a new AsyncHttpResponseHandler
-     */
-    public AsyncHttpResponseHandler() {
-        // Set up a handler to post events back to the correct thread if possible
-        if(Looper.myLooper() != null) {
-            handler = new Handler(){
-                public void handleMessage(Message msg){
-                    AsyncHttpResponseHandler.this.handleMessage(msg);
-                }
-            };
-        }
-    }
+	/**
+	 * Creates a new AsyncHttpResponseHandler
+	 */
+	public AsyncHttpResponseHandler() {
+		// Set up a handler to post events back to the correct thread if
+		// possible
+		if (Looper.myLooper() != null) {
+			handler = new Handler() {
+				@Override
+				public void handleMessage(Message msg) {
+					AsyncHttpResponseHandler.this.handleMessage(msg);
+				}
+			};
+		}
+	}
 
+	//
+	// Callbacks to be overridden, typically anonymously
+	//
 
-    //
-    // Callbacks to be overridden, typically anonymously
-    //
+	/**
+	 * Fired when the request is started, override to handle in your own code
+	 */
+	public void onStart() {
+	}
 
-    /**
-     * Fired when the request is started, override to handle in your own code
-     */
-    public void onStart() {}
+	/**
+	 * Fired in all cases when the request is finished, after both success and
+	 * failure, override to handle in your own code
+	 */
+	public void onFinish() {
+	}
 
-    /**
-     * Fired in all cases when the request is finished, after both success and failure, override to handle in your own code
-     */
-    public void onFinish() {}
+	//
+	// Pre-processing of messages (executes in background threadpool thread)
+	//
+	protected void sendStartMessage() {
+		sendMessage(obtainMessage(START_MESSAGE, null));
+	}
 
-    /**
-     * Fired when a request returns successfully, override to handle in your own code
-     * @param statusCode the status code of the response
-     * @param content the body of the HTTP response from the server
-     */
-    public void onSuccess(int statusCode, byte[] byteData) {}
+	protected void sendSuccessMessage(int statusCode, Header[] headers, byte[] responseBody) {
+		sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[] { new Integer(statusCode), headers, responseBody }));
+	}
 
-    /**
-     * Fired when a request fails to complete, override to handle in your own code
-     * @param error the underlying cause of the failure
-     * @param content the response body, if any
-     */
-    public void onFailure(Throwable error, String content) {
-        // By default, call the deprecated onFailure(Throwable) for compatibility
-    }
+	protected void sendFailureMessage(Throwable e, String responseBody) {
+		sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[] { e, responseBody }));
+	}
 
-    //
-    // Pre-processing of messages (executes in background threadpool thread)
-    //
+	// Methods which emulate android's Handler and Message methods
+	protected void handleMessage(Message msg) {
+		Object[] response;
+		switch (msg.what) {
+		case START_MESSAGE:
+			onStart();
+			break;
+		case SUCCESS_MESSAGE:
+			response = (Object[]) msg.obj;
+			onSuccess(((Integer) response[0]).intValue(), (Header[]) response[1], (byte[]) response[2]);
+			break;
+		case FAILURE_MESSAGE:
+			response = (Object[]) msg.obj;
+			onFailure((Throwable) response[0], (String) response[1]);
+			break;
+		}
+	}
 
-    protected void sendSuccessMessage(int statusCode, byte[] byteData) {
-        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{Integer.valueOf(statusCode), byteData}));
-    }
+	protected void onSuccess(int intValue, Header[] headers, byte[] response) {
 
-    protected void sendFailureMessage(Throwable e, String responseBody) {
-        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{e, responseBody}));
-    }
+	}
 
-    protected void sendStartMessage() {
-        sendMessage(obtainMessage(START_MESSAGE, null));
-    }
+	protected void onFailure(Throwable throwable, String errorMsg) {
 
-    protected void sendFinishMessage() {
-        sendMessage(obtainMessage(FINISH_MESSAGE, null));
-    }
+	}
 
-    //
-    // Pre-processing of messages (in original calling thread, typically the UI thread)
-    //
+	protected void sendMessage(Message msg) {
+		if (handler != null) {
+			handler.sendMessage(msg);
+		} else {
+			handleMessage(msg);
+		}
+	}
 
-    protected void handleSuccessMessage(int statusCode, byte[] byteData) {
-        onSuccess(statusCode, byteData);
-    }
+	protected Message obtainMessage(int responseMessage, Object response) {
+		Message msg = null;
+		if (handler != null) {
+			msg = this.handler.obtainMessage(responseMessage, response);
+		} else {
+			msg = Message.obtain();
+			msg.what = responseMessage;
+			msg.obj = response;
+		}
+		return msg;
+	}
 
-    protected void handleFailureMessage(Throwable e, String responseBody) {
-        onFailure(e, responseBody);
-    }
+	// Interface to AsyncHttpRequest
+	void sendResponseMessage(HttpResponse response) {
+		StatusLine status = response.getStatusLine();
+		byte[] responseBody = null;
+		try {
+			HttpEntity entity = null;
+			HttpEntity temp = response.getEntity();
+			if (temp != null) {
+				entity = new BufferedHttpEntity(temp);
+				responseBody = EntityUtils.toByteArray(entity);
+			}
+		} catch (IOException e) {
+			sendFailureMessage(e, null);
+		}
 
-    // Methods which emulate android's Handler and Message methods
-    protected void handleMessage(Message msg) {
-        Object[] response;
+		if (status.getStatusCode() >= 300) {
+			sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()),
+					getFailureMsg(responseBody));
+		} else {
+			sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+		}
+	}
 
-        switch(msg.what) {
-            case SUCCESS_MESSAGE:
-                response = (Object[])msg.obj;
-                handleSuccessMessage(((Integer) response[0]).intValue(), (byte[]) response[1]);
-                break;
-            case FAILURE_MESSAGE:
-                response = (Object[])msg.obj;
-                handleFailureMessage((Throwable)response[0], (String)response[1]);
-                break;
-            case START_MESSAGE:
-                onStart();
-                break;
-            case FINISH_MESSAGE:
-                onFinish();
-                break;
-        }
-    }
-
-    protected void sendMessage(Message msg) {
-        if(handler != null){
-            handler.sendMessage(msg);
-        } else {
-            handleMessage(msg);
-        }
-    }
-
-    protected Message obtainMessage(int responseMessage, Object response) {
-        Message msg = null;
-        if(handler != null){
-            msg = this.handler.obtainMessage(responseMessage, response);
-        }else{
-            msg = Message.obtain();
-            msg.what = responseMessage;
-            msg.obj = response;
-        }
-        return msg;
-    }
-
-    // Interface to AsyncHttpRequest
-    void sendResponseMessage(HttpResponse response) {
-        StatusLine status = response.getStatusLine();
-        byte[] responseBody = null;
-        try {
-            HttpEntity entity = null;
-            HttpEntity temp = response.getEntity();
-            if(temp != null) {
-                entity = new BufferedHttpEntity(temp);
-                responseBody = EntityUtils.toByteArray(entity);
-            }
-        } catch(IOException e) {
-            sendFailureMessage(e, null);
-        }
-
-        if(status.getStatusCode() >= 300) {
-            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), "server response error");
-        } else {
-            sendSuccessMessage(status.getStatusCode(), responseBody);
-        }
-    }
+	private String getFailureMsg(byte[] msg) {
+		if (msg != null) {
+			return new String("UTF-8");
+		}
+		return null;
+	}
 }

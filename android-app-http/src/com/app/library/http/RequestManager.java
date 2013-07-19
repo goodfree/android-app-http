@@ -155,7 +155,7 @@ public class RequestManager {
 	public void get(Context context, String url, RequestListener requestListener, int actionId) {
 		get(context, url, null, requestListener, false, actionId);
 	}
-	
+
 	/**
 	 * get数据
 	 * 
@@ -165,7 +165,8 @@ public class RequestManager {
 	 * @param cache
 	 * @param actionId
 	 */
-	public void get(Context context, String url, RequestParams params, RequestListener requestListener, boolean cache, int actionId) {
+	public void get(Context context, String url, RequestParams params, RequestListener requestListener, boolean cache,
+			int actionId) {
 		final String encodeUrl = urlEncode(url);
 		if (!cache) {
 			asyncHttpClient.get(context, url, params, new HttpRequestListener(requestListener, actionId));
@@ -392,20 +393,14 @@ public class RequestManager {
 		}
 
 		@Override
-		public void onFinish() {
-			super.onFinish();
+		protected void onSuccess(int intValue, Header[] headers, byte[] response) {
+			super.onSuccess(intValue, headers, response);
+			requestListener.onCompleted(response, RequestListener.OK, "server response ok", actionId);
 		}
 
 		@Override
-		public void onSuccess(int statusCode, byte[] binaryData) {
-			super.onSuccess(statusCode, binaryData);
-			requestListener.onCompleted(binaryData, RequestListener.OK, "server response ok", actionId);
-		}
-
-		@Override
-		public void onFailure(Throwable error, String content) {
-			super.onFailure(error, content);
-			requestListener.onCompleted(null, RequestListener.ERR, content, actionId);
+		protected void onFailure(Throwable throwable, String response) {
+			requestListener.onCompleted(null, RequestListener.ERR, response, actionId);
 		}
 	}
 
@@ -423,7 +418,6 @@ public class RequestManager {
 		}
 		return false;
 	}
-
 
 	/**
 	 * 对字符串进行MD5加密。
@@ -472,5 +466,5 @@ public class RequestManager {
 		}
 		return buf.toString();
 	}
-	
+
 }

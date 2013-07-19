@@ -80,7 +80,7 @@ public class PersistentCookieStore implements CookieStore {
 
     @Override
     public void addCookie(Cookie cookie) {
-        String name = cookie.getName();
+        String name = cookie.getName() + cookie.getDomain();
 
         // Save cookie into local store, or remove if expired
         if(!cookie.isExpired(new Date())) {
@@ -98,9 +98,6 @@ public class PersistentCookieStore implements CookieStore {
 
     @Override
     public void clear() {
-        // Clear cookies from local store
-        cookies.clear();
-
         // Clear cookies from persistent store
         SharedPreferences.Editor prefsWriter = cookiePrefs.edit();
         for(String name : cookies.keySet()) {
@@ -108,6 +105,9 @@ public class PersistentCookieStore implements CookieStore {
         }
         prefsWriter.remove(COOKIE_NAME_STORE);
         prefsWriter.commit();
+
+        // Clear cookies from local store
+        cookies.clear();
     }
 
     @Override

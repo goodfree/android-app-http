@@ -210,12 +210,12 @@ public class RequestParams {
                 result.append("&");
 
             ArrayList<String> values = entry.getValue();
-            for (String value : values) {
-                if (values.indexOf(value) != 0)
+            for (int i = 0; i < values.size(); i++) {
+                if (i != 0)
                     result.append("&");
                 result.append(entry.getKey());
                 result.append("=");
-                result.append(value);
+                result.append(values.get(i));
             }
         }
 
@@ -236,6 +236,14 @@ public class RequestParams {
                 multipartEntity.addPart(entry.getKey(), entry.getValue());
             }
 
+            // Add dupe params
+            for(ConcurrentHashMap.Entry<String, ArrayList<String>> entry : urlParamsWithArray.entrySet()) {
+                ArrayList<String> values = entry.getValue();
+                for (String value : values) {
+                    multipartEntity.addPart(entry.getKey(), value);
+                }
+            }
+
             // Add file params
             int currentIndex = 0;
             int lastIndex = fileParams.entrySet().size() - 1;
@@ -250,14 +258,6 @@ public class RequestParams {
                     }
                 }
                 currentIndex++;
-            }
-
-            // Add dupe params
-            for(ConcurrentHashMap.Entry<String, ArrayList<String>> entry : urlParamsWithArray.entrySet()) {
-                ArrayList<String> values = entry.getValue();
-                for (String value : values) {
-                    multipartEntity.addPart(entry.getKey(), value);
-                }
             }
 
             entity = multipartEntity;
