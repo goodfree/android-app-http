@@ -96,19 +96,6 @@ public class AsyncHttpResponseHandler {
 	// Callbacks to be overridden, typically anonymously
 	//
 
-	/**
-	 * Fired when the request is started, override to handle in your own code
-	 */
-	public void onStart() {
-	}
-
-	/**
-	 * Fired in all cases when the request is finished, after both success and
-	 * failure, override to handle in your own code
-	 */
-	public void onFinish() {
-	}
-
 	//
 	// Pre-processing of messages (executes in background threadpool thread)
 	//
@@ -140,6 +127,12 @@ public class AsyncHttpResponseHandler {
 			onFailure((Throwable) response[0], (String) response[1]);
 			break;
 		}
+	}
+
+	/**
+	 * Fired when the request is started, override to handle in your own code
+	 */
+	public void onStart() {
 	}
 
 	protected void onSuccess(int intValue, Header[] headers, byte[] response) {
