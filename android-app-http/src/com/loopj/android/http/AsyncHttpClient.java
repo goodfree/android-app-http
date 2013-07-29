@@ -93,7 +93,7 @@ public class AsyncHttpClient {
     private static final String VERSION = "1.4.3";
 
     private static final int DEFAULT_MAX_CONNECTIONS = 15;
-    private static final int DEFAULT_SOCKET_TIMEOUT = 10 * 1000;
+    private static final int DEFAULT_SOCKET_TIMEOUT = 30 * 1000;
     private static final int DEFAULT_MAX_RETRIES = 3;
     private static final int DEFAULT_SOCKET_BUFFER_SIZE = 8192;
     private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
