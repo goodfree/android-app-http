@@ -17,10 +17,8 @@ import android.widget.ImageView;
  */
 public class WebImageView extends ImageView {
 	private static final int DEFAULT_DRAWABLE = -1;
-	private static final int DEFAULT_SAMPLE_SIZE = 1;
 
 	private int defaultDrawable = DEFAULT_DRAWABLE;
-	private int sampleSize = DEFAULT_SAMPLE_SIZE;
 	private String imageUrl = "";
 	private boolean hasRetry = false;
 
@@ -67,23 +65,8 @@ public class WebImageView extends ImageView {
 	 *            drawable id
 	 */
 	public void setURLAsync(String url, int defaultDrawable) {
-		this.setURLAsync(url, defaultDrawable, DEFAULT_SAMPLE_SIZE);
-	}
-
-	/**
-	 * set a url and default drawable
-	 * 
-	 * @param url
-	 *            network resource address
-	 * @param defaultImage
-	 *            drawable id
-	 * @param sampleSize
-	 *            sample for Options
-	 */
-	public void setURLAsync(String url, int defaultDrawable, int sampleSize) {
 		this.imageUrl = url;
 		this.defaultDrawable = defaultDrawable;
-		this.sampleSize = sampleSize;
 		this.firstLoad();
 	}
 
@@ -105,7 +88,7 @@ public class WebImageView extends ImageView {
 		if (TextUtils.isEmpty(imageUrl)) {
 			this.setDefaultImage();
 		} else {
-			RequestManager.getInstance().get(getContext(), imageUrl, null,requestListener, true, 0);
+			RequestManager.getInstance().get(getContext(), imageUrl, null, requestListener, true, 0);
 		}
 	}
 
@@ -139,12 +122,26 @@ public class WebImageView extends ImageView {
 				setImageBitmap(bitmap);
 			} else {
 				if (null != data) {
+					// decode image size
+					BitmapFactory.Options o = new BitmapFactory.Options();
+					o.inJustDecodeBounds = true;
+					BitmapFactory.decodeByteArray(data, 0, data.length, o);
+
+					// Find the correct scale value. It should be the power of
+					final int REQUIRED_SIZE = 100;
+					int width_tmp = o.outWidth, height_tmp = o.outHeight;
+					int scale = 1;
+					while (true) {
+						if (width_tmp / 2 < REQUIRED_SIZE || height_tmp / 2 < REQUIRED_SIZE)
+							break;
+						width_tmp /= 2;
+						height_tmp /= 2;
+						scale *= 2;
+					}
+
+					// decode with inSampleSize
 					BitmapFactory.Options options = new Options();
-					options.inDither = false;
-					options.inPreferredConfig = null;
-					options.inSampleSize = sampleSize;
-					options.inPreferredConfig = Bitmap.Config.RGB_565;
-					options.inJustDecodeBounds = false;
+					options.inSampleSize = scale;
 					bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
 					if (bitmap != null) {
 						setImageBitmap(bitmap);
