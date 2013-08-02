@@ -1,7 +1,5 @@
 package com.app.library.http;
 
-import java.util.HashMap;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -112,21 +110,11 @@ public class WebImageView extends ImageView {
 					setDefaultImage();
 				}
 			} else {
-				setResult(data);
-			}
-		}
-
-		private void setResult(byte[] data) {
-			Bitmap bitmap = WebImageBuffer.get(imageUrl);
-			if (null != bitmap) {
-				setImageBitmap(bitmap);
-			} else {
 				if (null != data) {
 					// decode image size
 					BitmapFactory.Options o = new BitmapFactory.Options();
 					o.inJustDecodeBounds = true;
 					BitmapFactory.decodeByteArray(data, 0, data.length, o);
-
 					// Find the correct scale value. It should be the power of
 					final int REQUIRED_SIZE = 100;
 					int width_tmp = o.outWidth, height_tmp = o.outHeight;
@@ -138,19 +126,15 @@ public class WebImageView extends ImageView {
 						height_tmp /= 2;
 						scale *= 2;
 					}
-
 					// decode with inSampleSize
 					BitmapFactory.Options options = new Options();
 					options.inSampleSize = scale;
-					bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+					Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length, options);
 					if (bitmap != null) {
 						setImageBitmap(bitmap);
-						WebImageBuffer.put(imageUrl, bitmap);
 					} else {
 						setDefaultImage();
 					}
-				} else {
-					setDefaultImage();
 				}
 			}
 		}
@@ -162,45 +146,6 @@ public class WebImageView extends ImageView {
 	public void setDefaultImage() {
 		if (defaultDrawable != -1) {
 			setImageDrawable(getResources().getDrawable(defaultDrawable));
-		}
-	}
-
-	/**
-	 * reset WebImageBuffer
-	 */
-	public static void resetWebImageBuffer() {
-		WebImageBuffer.clear();
-	}
-
-	/**
-	 * WebImageBuffer for WebImageView
-	 */
-	public static class WebImageBuffer {
-		private final static HashMap<String, Bitmap> caches = new HashMap<String, Bitmap>();
-
-		public synchronized static void clear() {
-			try {
-				caches.clear();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		public synchronized static Bitmap get(String url) {
-			try {
-				return caches.get(url);
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
-
-		public synchronized static void put(String url, Bitmap bitmap) {
-			try {
-				caches.put(url, bitmap);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
