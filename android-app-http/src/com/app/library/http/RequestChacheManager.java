@@ -8,10 +8,16 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+/**
+ * RequestChacheManager for "GET" method if isCahce
+ * 
+ * @author savant-pan
+ * 
+ */
 public class RequestChacheManager {
 	private static RequestChacheManager INSTANCE = null;
-	private RequestDBHelper requestDBHelper;
-	
+	private RequestDBHelper requestDBHelper = null;
+
 	private static final String DB_NAME = "requestCache.db";
 	private static final int DB_VER = 1;
 	private static final String TABLE_CREATE = "create table request_cache(url varchar(32) primary key,  lastmodified varchar(16))";
