@@ -13,17 +13,17 @@ import android.widget.ImageView;
  * 
  * @author savant-pan
  */
-public class WebImageView extends ImageView {
-	private static final int DEFAULT_DRAWABLE = -1;
+public class UrlImageView extends ImageView {
+	private static final int DEFAULT_RESID = -1;
 
-	private int defaultDrawable = DEFAULT_DRAWABLE;
+	private int imageResId = DEFAULT_RESID;
 	private String imageUrl = "";
 	private boolean hasRetry = false;
 
 	/**
 	 * @param context
 	 */
-	public WebImageView(Context context) {
+	public UrlImageView(Context context) {
 		this(context, null);
 	}
 
@@ -31,7 +31,7 @@ public class WebImageView extends ImageView {
 	 * @param context
 	 * @param attrs
 	 */
-	public WebImageView(Context context, AttributeSet attrs) {
+	public UrlImageView(Context context, AttributeSet attrs) {
 		this(context, attrs, 0);
 	}
 
@@ -40,7 +40,7 @@ public class WebImageView extends ImageView {
 	 * @param attrs
 	 * @param defStyle
 	 */
-	public WebImageView(Context context, AttributeSet attrs, int defStyle) {
+	public UrlImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
 
@@ -51,7 +51,7 @@ public class WebImageView extends ImageView {
 	 *            network resource address
 	 */
 	public void setURLAsync(String url) {
-		this.setURLAsync(url, DEFAULT_DRAWABLE);
+		this.setURLAsync(url, DEFAULT_RESID);
 	}
 
 	/**
@@ -59,12 +59,12 @@ public class WebImageView extends ImageView {
 	 * 
 	 * @param url
 	 *            network resource address
-	 * @param defaultImage
+	 * @param imageResId
 	 *            drawable id
 	 */
-	public void setURLAsync(String url, int defaultDrawable) {
+	public void setURLAsync(String url, int imageResId) {
 		this.imageUrl = url;
-		this.defaultDrawable = defaultDrawable;
+		this.imageResId = imageResId;
 		this.firstLoad();
 	}
 
@@ -72,6 +72,7 @@ public class WebImageView extends ImageView {
 	 * first load image
 	 */
 	private void firstLoad() {
+		this.setImageResource(imageResId);
 		this.loadResource();
 	}
 
@@ -84,7 +85,7 @@ public class WebImageView extends ImageView {
 
 	private void loadResource() {
 		if (TextUtils.isEmpty(imageUrl)) {
-			this.setDefaultImage();
+			setImageResource(imageResId);
 		} else {
 			RequestManager.getInstance().get(getContext(), imageUrl, null, requestListener, true, 0);
 		}
@@ -107,7 +108,7 @@ public class WebImageView extends ImageView {
 					hasRetry = true;
 					retryCache();
 				} else {
-					setDefaultImage();
+					setImageResource(imageResId);
 				}
 			} else {
 				if (null != data) {
@@ -133,20 +134,11 @@ public class WebImageView extends ImageView {
 					if (bitmap != null) {
 						setImageBitmap(bitmap);
 					} else {
-						setDefaultImage();
+						setImageResource(imageResId);
 					}
 				}
 			}
 		}
 	};
-
-	/**
-	 * set default drawable
-	 */
-	public void setDefaultImage() {
-		if (defaultDrawable != -1) {
-			setImageDrawable(getResources().getDrawable(defaultDrawable));
-		}
-	}
 
 }

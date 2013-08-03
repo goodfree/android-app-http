@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -20,8 +19,6 @@ import org.apache.http.protocol.HTTP;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.graphics.Path.FillType;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -58,12 +55,12 @@ public class RequestManager {
 	 * @param context
 	 */
 	public static void clearHttpCache(Context context) {
-		context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE).edit().clear().commit();
 		final String fl[] = context.fileList();
 		try {
 			for (String f : fl) {
 				context.deleteFile(f);
 			}
+			RequestChacheManager.getInstance(context).deletAll();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -164,21 +161,18 @@ public class RequestManager {
 	 * @param context
 	 * @param url
 	 * @param requestListener
-	 * @param cache
+	 * @param isCache
 	 * @param actionId
 	 */
-	public void get(Context context, String url, RequestParams params, RequestListener requestListener, boolean cache,
-			int actionId) {
+	public void get(Context context, String url, RequestParams params, RequestListener requestListener,
+			boolean isCache, int actionId) {
 		final String encodeUrl = urlEncode(url);
-		if (!cache) {
-			System.out.println("no cache--");
+		if (!isCache) {
 			asyncHttpClient.get(context, url, params, new HttpRequestListener(requestListener, actionId));
 		} else {
 			if (!hasCache(context, encodeUrl)) {
-				System.out.println("no cache file--");
 				loadAndSaveResource(context, encodeUrl, requestListener, 0l, actionId);
 			} else {
-				System.out.println("cache file--");
 				loadCache(context, encodeUrl, requestListener, actionId);
 				if (!hasNetwork(context)) {
 					return;
@@ -235,10 +229,8 @@ public class RequestManager {
 			}
 
 			protected void onPostExecute(Long result) {
-				long ret = RequestChache.getInstance(context).getLastModified(convertFilename(url));
-				System.out.println("result="+result+",ret"+ret);
+				final long ret = RequestChacheManager.getInstance(context).getLastModified(url);
 				if (result != -1l && result != ret) {
-					System.out.println("update--");
 					loadAndSaveResource(context, url, null, result, actionId);// 不返回数据到接口
 				}
 			}
@@ -382,7 +374,7 @@ public class RequestManager {
 
 				os.close();
 				inputStream.close();
-				RequestChache.getInstance(context).update(url, lastModified);
+				RequestChacheManager.getInstance(context).update(url, lastModified);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
