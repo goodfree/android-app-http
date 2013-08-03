@@ -15,13 +15,13 @@ import android.database.sqlite.SQLiteOpenHelper;
  * 
  */
 public class RequestChacheManager {
-	private static RequestChacheManager INSTANCE = null;
-	private RequestDBHelper requestDBHelper = null;
-
 	private static final String DB_NAME = "requestCache.db";
 	private static final int DB_VER = 1;
 	private static final String TABLE_CREATE = "create table request_cache(url varchar(32) primary key,  lastmodified varchar(16))";
 
+	private static RequestChacheManager INSTANCE = null;
+	private RequestDBHelper requestDBHelper = null;
+	
 	/**
 	 * RequestDBHelper
 	 */
@@ -41,10 +41,17 @@ public class RequestChacheManager {
 		}
 	}
 
-	public RequestChacheManager(Context context) {
+	private RequestChacheManager(Context context) {
 		this.requestDBHelper = new RequestDBHelper(context);
 	}
 
+	/**
+	 * get instance of RequestChacheManager
+	 * 
+	 * @param context
+	 *            Context value
+	 * @return
+	 */
 	public static RequestChacheManager getInstance(Context context) {
 		if (INSTANCE == null) {
 			INSTANCE = new RequestChacheManager(context);
