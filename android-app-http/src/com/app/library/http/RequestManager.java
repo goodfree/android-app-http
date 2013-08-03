@@ -207,7 +207,7 @@ public class RequestManager {
 	 */
 	private void checkUpdate(final Context context, final String url, final int actionId) {
 		final SharedPreferences pref = context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE);
-		final String fileName = encryptMD5(url);
+		final String fileName = getFileName(url);
 		new AsyncTask<Void, Void, Long>() {
 			@Override
 			protected Long doInBackground(Void... params) {
@@ -254,7 +254,7 @@ public class RequestManager {
 			@Override
 			protected byte[] doInBackground(Void... params) {
 				try {
-					InputStream is = context.openFileInput(encryptMD5(url));
+					InputStream is = context.openFileInput(getFileName(url));
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					byte[] bytes = new byte[4096];
 					int len = 0;
@@ -283,7 +283,7 @@ public class RequestManager {
 	 */
 	private boolean hasCache(Context context, String url) {
 		try {
-			context.openFileInput(encryptMD5(url));
+			context.openFileInput(getFileName(url));
 			return true;
 		} catch (Exception e) {
 			return false;
@@ -349,7 +349,7 @@ public class RequestManager {
 		private void saveCache(Context context, String url, byte[] data) {
 			try {
 				ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-				FileOutputStream os = context.openFileOutput(encryptMD5(url), Context.MODE_PRIVATE);
+				FileOutputStream os = context.openFileOutput(getFileName(url), Context.MODE_PRIVATE);
 
 				byte[] buffer = new byte[1024];
 				int len = 0;
@@ -370,7 +370,7 @@ public class RequestManager {
 
 		private void saveLastModified() {
 			context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE).edit()
-					.putLong(encryptMD5(url), lastModified).commit();
+					.putLong(getFileName(url), lastModified).commit();
 		}
 	}
 
@@ -422,23 +422,12 @@ public class RequestManager {
 	/**
 	 * 对字符串进行MD5加密。
 	 */
-	public static String encryptMD5(String strInput) {
-		StringBuffer buf = null;
-		try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			md.update(strInput.getBytes("UTF-8"));
-			byte b[] = md.digest();
-			buf = new StringBuffer(b.length * 2);
-			for (int i = 0; i < b.length; i++) {
-				if (((int) b[i] & 0xff) < 0x10) { /* & 0xff转换无符号整型 */
-					buf.append("0");
-				}
-				buf.append(Long.toHexString((int) b[i] & 0xff)); /* 转换16进制,下方法同 */
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+	public static String getFileName(String input) {
+		if (null != input) {
+			return input.hashCode() + "";
+		} else {
+			return "error";
 		}
-		return buf.toString();
 	}
 
 	/**
