@@ -2,6 +2,7 @@ package com.app.library.http;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Path.FillType;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -169,11 +171,14 @@ public class RequestManager {
 			int actionId) {
 		final String encodeUrl = urlEncode(url);
 		if (!cache) {
+			System.out.println("no cache--");
 			asyncHttpClient.get(context, url, params, new HttpRequestListener(requestListener, actionId));
 		} else {
 			if (!hasCache(context, encodeUrl)) {
+				System.out.println("no cache file--");
 				loadAndSaveResource(context, encodeUrl, requestListener, 0l, actionId);
 			} else {
+				System.out.println("cache file--");
 				loadCache(context, encodeUrl, requestListener, actionId);
 				if (!hasNetwork(context)) {
 					return;
@@ -206,8 +211,6 @@ public class RequestManager {
 	 * @param actionId
 	 */
 	private void checkUpdate(final Context context, final String url, final int actionId) {
-		final SharedPreferences pref = context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE);
-		final String fileName = getFileName(url);
 		new AsyncTask<Void, Void, Long>() {
 			@Override
 			protected Long doInBackground(Void... params) {
@@ -215,7 +218,7 @@ public class RequestManager {
 				try {
 					final URL u = new URL(url);
 					final HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-					conn.setConnectTimeout(5 * 1000);
+					conn.setConnectTimeout(3 * 1000);
 					conn.setRequestProperty("User-agent", "Mozilla/4.0");
 					conn.setRequestProperty("Connection", "Keep-Alive");
 					conn.setRequestProperty("Charset", "UTF-8");
@@ -232,7 +235,10 @@ public class RequestManager {
 			}
 
 			protected void onPostExecute(Long result) {
-				if (result != -1l && result != pref.getLong(fileName, 0l)) {
+				long ret = RequestChache.getInstance(context).getLastModified(convertFilename(url));
+				System.out.println("result="+result+",ret"+ret);
+				if (result != -1l && result != ret) {
+					System.out.println("update--");
 					loadAndSaveResource(context, url, null, result, actionId);// 不返回数据到接口
 				}
 			}
@@ -253,20 +259,28 @@ public class RequestManager {
 		new AsyncTask<Void, Void, byte[]>() {
 			@Override
 			protected byte[] doInBackground(Void... params) {
+				FileInputStream ins = null;
 				try {
-					InputStream is = context.openFileInput(getFileName(url));
+					ins = context.openFileInput(convertFilename(url));
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					byte[] bytes = new byte[4096];
 					int len = 0;
-					while ((len = is.read(bytes)) > 0) {
+					while ((len = ins.read(bytes)) > 0) {
 						bos.write(bytes, 0, len);
 					}
 					bos.flush();
 					return bos.toByteArray();
-
 				} catch (Exception e) {
 					e.printStackTrace();
 					return null;
+				} finally {
+					if (ins != null) {
+						try {
+							ins.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
 				}
 			}
 
@@ -282,11 +296,20 @@ public class RequestManager {
 	 * 检测缓存
 	 */
 	private boolean hasCache(Context context, String url) {
+		FileInputStream ins = null;
 		try {
-			context.openFileInput(getFileName(url));
+			ins = context.openFileInput(convertFilename(url));
 			return true;
 		} catch (Exception e) {
 			return false;
+		} finally {
+			if (ins != null) {
+				try {
+					ins.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
@@ -349,7 +372,7 @@ public class RequestManager {
 		private void saveCache(Context context, String url, byte[] data) {
 			try {
 				ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-				FileOutputStream os = context.openFileOutput(getFileName(url), Context.MODE_PRIVATE);
+				FileOutputStream os = context.openFileOutput(convertFilename(url), Context.MODE_PRIVATE);
 
 				byte[] buffer = new byte[1024];
 				int len = 0;
@@ -359,18 +382,12 @@ public class RequestManager {
 
 				os.close();
 				inputStream.close();
-				saveLastModified();
-
+				RequestChache.getInstance(context).update(url, lastModified);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		}
-
-		private void saveLastModified() {
-			context.getSharedPreferences("cachefiles", Context.MODE_PRIVATE).edit()
-					.putLong(getFileName(url), lastModified).commit();
 		}
 	}
 
@@ -422,12 +439,23 @@ public class RequestManager {
 	/**
 	 * 对字符串进行MD5加密。
 	 */
-	public static String getFileName(String input) {
-		if (null != input) {
-			return input.hashCode() + "";
-		} else {
-			return "error";
+	public static String convertFilename(String strInput) {
+		StringBuffer buf = null;
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(strInput.getBytes("UTF-8"));
+			byte b[] = md.digest();
+			buf = new StringBuffer(b.length * 2);
+			for (int i = 0; i < b.length; i++) {
+				if (((int) b[i] & 0xff) < 0x10) { /* & 0xff转换无符号整型 */
+					buf.append("0");
+				}
+				buf.append(Long.toHexString((int) b[i] & 0xff)); /* 转换16进制,下方法同 */
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
+		return buf.toString().substring(8, 24);
 	}
 
 	/**
