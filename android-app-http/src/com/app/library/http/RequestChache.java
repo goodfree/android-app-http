@@ -26,19 +26,14 @@ public class RequestChache {
 	 * @param item
 	 */
 	public void update(String url, long lastModified) {
+		SQLiteDatabase db = requestDBHelper.getWritableDatabase();
 		if (!find(url)) { // 创建
-			add(url, lastModified);
+			db.execSQL("insert into request_cache(url, lastmodified) values(?,?)",
+					new Object[] { url, String.valueOf(lastModified) });
 		} else { // 有则更新
-			SQLiteDatabase db = requestDBHelper.getWritableDatabase();
 			db.execSQL("update request_cache set lastmodified=? where url=?",
 					new Object[] { String.valueOf(lastModified), url });
 		}
-	}
-
-	private void add(String url, long lastModified) {
-		SQLiteDatabase db = requestDBHelper.getWritableDatabase();
-		db.execSQL("insert into request_cache(url, lastmodified) values(?,?)",
-				new Object[] { url, String.valueOf(lastModified) });
 	}
 	
 	/**
@@ -57,7 +52,6 @@ public class RequestChache {
 				String last = cursor.getString(cursor.getColumnIndex("lastmodified"));
 				ret = Long.valueOf(last);
 			}
-			System.out.println(ret);
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
