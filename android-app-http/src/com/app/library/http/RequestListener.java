@@ -33,5 +33,5 @@ public interface RequestListener {
 	 * @param actionId
 	 *            request identifier
 	 */
-	void onCompleted(byte[] data, int statusCode, String description, int actionId);
+	void onCompleted(int statusCode, byte[] data, long lastModified, String description, int actionId);
 }

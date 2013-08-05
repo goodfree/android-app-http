@@ -102,7 +102,7 @@ public class UrlImageView extends ImageView {
 		}
 
 		@Override
-		public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
+		public void onCompleted(int statusCode, byte[] data, long lastModified, String description, int actionId) {
 			if (RequestListener.ERR == statusCode) {
 				if (!hasRetry) {
 					hasRetry = true;

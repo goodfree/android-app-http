@@ -103,8 +103,9 @@ public class AsyncHttpResponseHandler {
 		sendMessage(obtainMessage(START_MESSAGE, null));
 	}
 
-	protected void sendSuccessMessage(int statusCode, Header[] headers, byte[] responseBody) {
-		sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[] { new Integer(statusCode), headers, responseBody }));
+	protected void sendSuccessMessage(int statusCode, Header[] headers, byte[] responseBody, long lastModified) {
+		sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[] { new Integer(statusCode), headers, responseBody,
+				lastModified }));
 	}
 
 	protected void sendFailureMessage(Throwable e, String responseBody) {
@@ -120,7 +121,8 @@ public class AsyncHttpResponseHandler {
 			break;
 		case SUCCESS_MESSAGE:
 			response = (Object[]) msg.obj;
-			onSuccess(((Integer) response[0]).intValue(), (Header[]) response[1], (byte[]) response[2]);
+			onSuccess(((Integer) response[0]).intValue(), (Header[]) response[1], (byte[]) response[2],
+					(Long) response[3]);
 			break;
 		case FAILURE_MESSAGE:
 			response = (Object[]) msg.obj;
@@ -135,7 +137,7 @@ public class AsyncHttpResponseHandler {
 	public void onStart() {
 	}
 
-	protected void onSuccess(int intValue, Header[] headers, byte[] response) {
+	protected void onSuccess(int intValue, Header[] headers, byte[] response, long lastModified) {
 
 	}
 
@@ -166,24 +168,50 @@ public class AsyncHttpResponseHandler {
 	// Interface to AsyncHttpRequest
 	void sendResponseMessage(HttpResponse response) {
 		StatusLine status = response.getStatusLine();
+		long lastModified = -1l;
+		try {
+			final String last = response.getLastHeader("last-modified").getValue();
+			if (null != last && !"".equals(last)) {
+				java.util.Date d = new java.util.Date(last);
+				lastModified = d.getTime();
+			}
+		} catch (Exception e) {
+		}
+
+		boolean modified = isLastModified(lastModified);
+		if (!modified) {
+			sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), loadCache(), lastModified);
+			return;
+		}
+
 		byte[] responseBody = null;
 		try {
 			HttpEntity entity = null;
 			HttpEntity temp = response.getEntity();
+
 			if (temp != null) {
 				entity = new BufferedHttpEntity(temp);
 				responseBody = EntityUtils.toByteArray(entity);
 			}
 		} catch (IOException e) {
 			sendFailureMessage(e, null);
+			return;
 		}
 
 		if (status.getStatusCode() >= 300) {
 			sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()),
 					getFailureMsg(responseBody));
 		} else {
-			sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+			sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody, lastModified);
 		}
+	}
+
+	protected boolean isLastModified(long lastModified) {
+		return true;
+	}
+
+	protected byte[] loadCache() {
+		return null;
 	}
 
 	private String getFailureMsg(byte[] msg) {

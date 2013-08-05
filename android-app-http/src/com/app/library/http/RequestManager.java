@@ -7,8 +7,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.security.MessageDigest;
 
 import org.apache.http.Header;
@@ -80,7 +78,7 @@ public class RequestManager {
 	 * @param actionId
 	 */
 	public void post(Context context, String url, RequestParams params, RequestListener requestListener, int actionId) {
-		asyncHttpClient.post(context, url, params, new HttpRequestListener(requestListener, actionId));
+		asyncHttpClient.post(context, url, params, new HttpResponseHandler(requestListener, actionId));
 	}
 
 	/**
@@ -94,7 +92,7 @@ public class RequestManager {
 	 */
 	public void post(Context context, String url, JSONObject params, RequestListener requestListener, int actionId) {
 		asyncHttpClient.post(context, url, rpcToEntity(params.toString(), "application/json"), "application/json",
-				new HttpRequestListener(requestListener, actionId));
+				new HttpResponseHandler(requestListener, actionId));
 	}
 
 	/**
@@ -110,7 +108,7 @@ public class RequestManager {
 	public void post(Context context, String url, Header[] headers, JSONObject params, RequestListener requestListener,
 			int actionId) {
 		asyncHttpClient.post(context, url, headers, rpcToEntity(params.toString(), "application/json"),
-				"application/json", new HttpRequestListener(requestListener, actionId));
+				"application/json", new HttpResponseHandler(requestListener, actionId));
 	}
 
 	/**
@@ -124,7 +122,7 @@ public class RequestManager {
 	 */
 	public void post(Context context, String url, String params, RequestListener requestListener, int actionId) {
 		asyncHttpClient.post(context, url, rpcToEntity(params, "application/xml"), "application/xml",
-				new HttpRequestListener(requestListener, actionId));
+				new HttpResponseHandler(requestListener, actionId));
 	}
 
 	/**
@@ -140,7 +138,27 @@ public class RequestManager {
 	public void post(Context context, String url, Header[] headers, String params, RequestListener requestListener,
 			int actionId) {
 		asyncHttpClient.post(context, url, headers, rpcToEntity(params, "application/xml"), "application/xml",
-				new HttpRequestListener(requestListener, actionId));
+				new HttpResponseHandler(requestListener, actionId));
+	}
+
+	/**
+	 * 将JSON/XML字符串转为HttpEntity(StringEntity)
+	 * 
+	 * @param params
+	 * @param contentType
+	 * @return
+	 */
+	private static HttpEntity rpcToEntity(String params, String contentType) {
+		StringEntity entity = null;
+		if (!TextUtils.isEmpty(params)) {
+			try {
+				entity = new StringEntity(params, HTTP.UTF_8);
+				entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, contentType));
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+		return entity;
 	}
 
 	/**
@@ -152,7 +170,7 @@ public class RequestManager {
 	 * @param actionId
 	 */
 	public void get(Context context, String url, RequestListener requestListener, int actionId) {
-		get(context, url, null, requestListener, false, actionId);
+		get(context, urlEncode(url), null, requestListener, false, actionId);
 	}
 
 	/**
@@ -164,21 +182,30 @@ public class RequestManager {
 	 * @param isCache
 	 * @param actionId
 	 */
-	public void get(Context context, String url, RequestParams params, RequestListener requestListener,
-			boolean isCache, int actionId) {
-		final String encodeUrl = urlEncode(url);
+	public synchronized void get(final Context context, final String url, final RequestParams params,
+			final RequestListener requestListener, final boolean isCache, final int actionId) {
 		if (!isCache) {
-			asyncHttpClient.get(context, url, params, new HttpRequestListener(requestListener, actionId));
+			asyncHttpClient.get(context, url, params, new HttpResponseHandler(requestListener, actionId));
 		} else {
-			if (!hasCache(context, encodeUrl)) {
-				loadAndSaveResource(context, encodeUrl, requestListener, 0l, actionId);
+			if (!hasNetwork(context)) {
+				new AsyncTask<Void, Void, byte[]>() {
+					protected void onPreExecute() {
+						requestListener.onStart();
+					}
+
+					@Override
+					protected byte[] doInBackground(Void... params) {
+						return loadCacheResource(context, url);
+					}
+
+					protected void onPostExecute(byte[] result) {
+						boolean flag = (result != null);
+						requestListener.onCompleted((flag ? RequestListener.OK : RequestListener.ERR), result, -1l,
+								flag ? "load cache ok" : "load cache error", actionId);
+					}
+				}.execute();
 			} else {
-				loadCache(context, encodeUrl, requestListener, actionId);
-				if (!hasNetwork(context)) {
-					return;
-				} else {
-					checkUpdate(context, encodeUrl, actionId);
-				}
+				loadAndSaveResource(context, url, requestListener, actionId);
 			}
 		}
 	}
@@ -192,49 +219,79 @@ public class RequestManager {
 	 * @param actionId
 	 */
 	private void loadAndSaveResource(final Context context, final String url, final RequestListener requestListener,
-			final long lastModified, final int actionId) {
-		asyncHttpClient.get(context, url, new HttpRequestListener(new CacheRequestListener(context, url,
-				requestListener, lastModified), actionId));
+			final int actionId) {
+		asyncHttpClient.get(context, url, new HttpResponseHandler(context, url, requestListener, actionId));
 	}
 
 	/**
-	 * 检测/更新缓存
-	 * 
-	 * @param context
-	 * @param url
-	 * @param actionId
+	 * 网络请求处理
 	 */
-	private void checkUpdate(final Context context, final String url, final int actionId) {
-		new AsyncTask<Void, Void, Long>() {
-			@Override
-			protected Long doInBackground(Void... params) {
-				long lastModified = -1l;
-				try {
-					final URL u = new URL(url);
-					final HttpURLConnection conn = (HttpURLConnection) u.openConnection();
-					conn.setConnectTimeout(3 * 1000);
-					conn.setRequestProperty("User-agent", "Mozilla/4.0");
-					conn.setRequestProperty("Connection", "Keep-Alive");
-					conn.setRequestProperty("Charset", "UTF-8");
-					conn.setRequestMethod("GET");
-					conn.connect();
-					if (conn.getResponseCode() == 200) {
-						lastModified = conn.getLastModified();
-					}
-					conn.disconnect();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				return lastModified;
-			}
+	private class HttpResponseHandler extends AsyncHttpResponseHandler {
+		private RequestListener requestListener;
+		private int actionId;
+		private Context context;
+		private String url;
 
-			protected void onPostExecute(Long result) {
-				final long ret = RequestChacheManager.getInstance(context).getLastModified(url);
-				if (result != -1l && result != ret) {
-					loadAndSaveResource(context, url, null, result, actionId);// 不返回数据到接口
-				}
+		public HttpResponseHandler(RequestListener requestListener, int actionId) {
+			super();
+			this.requestListener = requestListener;
+			this.actionId = actionId;
+		}
+
+		public HttpResponseHandler(Context context, String url, RequestListener requestListener, int actionId) {
+			super();
+			this.context = context;
+			this.url = url;
+			this.requestListener = requestListener;
+			this.actionId = actionId;
+		}
+
+		@Override
+		public void onStart() {
+			super.onStart();
+			requestListener.onStart();
+		}
+
+		@Override
+		protected void onSuccess(int intValue, Header[] headers, final byte[] response, final long lastModified) {
+			super.onSuccess(intValue, headers, response, lastModified);
+			requestListener.onCompleted(RequestListener.OK, response, lastModified, "server response ok", actionId);
+			if (context != null && url != null && isLastModified(lastModified)) {
+				new AsyncTask<Void, Void, Void>() {
+					@Override
+					protected Void doInBackground(Void... params) {
+						saveCacheResource(context, url, response, lastModified);
+						return null;
+					}
+
+				}.execute();
 			}
-		}.execute();
+		}
+
+		@Override
+		protected void onFailure(Throwable throwable, String response) {
+			requestListener.onCompleted(RequestListener.ERR, null, -1l, response, actionId);
+		}
+
+		@Override
+		protected boolean isLastModified(long lastModified) {
+			if (context != null && url != null) {// Only "GET" call
+				if (!hasCache(context, url)) {
+					return true;
+				} else {
+					final long ret = RequestChacheManager.getInstance(context).getLastModified(url);
+					return ret != -1 && ret != lastModified;
+				}
+			} else {
+				return super.isLastModified(lastModified);
+			}
+		}
+
+		@Override
+		protected byte[] loadCache() {
+			return loadCacheResource(context, url);
+		}
+
 	}
 
 	/**
@@ -242,46 +299,67 @@ public class RequestManager {
 	 * 
 	 * @param context
 	 * @param url
-	 * @param requestListener
-	 * @param actionId
 	 */
-	private void loadCache(final Context context, final String url, final RequestListener requestListener,
-			final int actionId) {
-		requestListener.onStart();
-		new AsyncTask<Void, Void, byte[]>() {
-			@Override
-			protected byte[] doInBackground(Void... params) {
-				FileInputStream ins = null;
+	private byte[] loadCacheResource(Context context, final String url) {
+		FileInputStream ins = null;
+		try {
+			ins = context.openFileInput(convertFilename(url));
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			byte[] bytes = new byte[4096];
+			int len = 0;
+			while ((len = ins.read(bytes)) > 0) {
+				bos.write(bytes, 0, len);
+			}
+			bos.flush();
+			return bos.toByteArray();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			if (ins != null) {
 				try {
-					ins = context.openFileInput(convertFilename(url));
-					ByteArrayOutputStream bos = new ByteArrayOutputStream();
-					byte[] bytes = new byte[4096];
-					int len = 0;
-					while ((len = ins.read(bytes)) > 0) {
-						bos.write(bytes, 0, len);
-					}
-					bos.flush();
-					return bos.toByteArray();
-				} catch (Exception e) {
+					ins.close();
+				} catch (IOException e) {
 					e.printStackTrace();
-					return null;
-				} finally {
-					if (ins != null) {
-						try {
-							ins.close();
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
 				}
 			}
+		}
+	}
 
-			protected void onPostExecute(byte[] result) {
-				boolean flag = (result != null);
-				requestListener.onCompleted(result, (flag ? RequestListener.OK : RequestListener.ERR),
-						flag ? "load cache ok" : "load cache error", actionId);
+	private void saveCacheResource(Context context, String url, byte[] response, long lastModified) {
+		ByteArrayInputStream ins = null;
+		FileOutputStream os = null;
+		try {
+			ins = new ByteArrayInputStream(response);
+			os = context.openFileOutput(convertFilename(url), Context.MODE_PRIVATE);
+			byte[] buffer = new byte[1024];
+			int len = 0;
+			while ((len = ins.read(buffer)) > 0) {
+				os.write(buffer, 0, len);
 			}
-		}.execute();
+			os.flush();
+
+			RequestChacheManager.getInstance(context).update(url, lastModified);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (ins != null) {
+				try {
+					ins.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (os != null) {
+				try {
+					os.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 	/**
@@ -306,114 +384,6 @@ public class RequestManager {
 	}
 
 	/**
-	 * 将JSON/XML字符串转为HttpEntity(StringEntity)
-	 * 
-	 * @param params
-	 * @param contentType
-	 * @return
-	 */
-	public static HttpEntity rpcToEntity(String params, String contentType) {
-		StringEntity entity = null;
-		if (!TextUtils.isEmpty(params)) {
-			try {
-				entity = new StringEntity(params, HTTP.UTF_8);
-				entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, contentType));
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
-		return entity;
-	}
-
-	/**
-	 * 网络请求+缓存处理
-	 */
-	private class CacheRequestListener implements RequestListener {
-		private Context context = null;
-		private String url = "";
-		private RequestListener requestListener = null;
-		private long lastModified;
-
-		public CacheRequestListener(Context context, String url, RequestListener requestListener, long lastModified) {
-			this.context = context;
-			this.url = url;
-			this.requestListener = requestListener;
-			this.lastModified = lastModified;
-		}
-
-		@Override
-		public void onStart() {
-			if (requestListener != null) {
-				requestListener.onStart();
-			}
-		}
-
-		@Override
-		public void onCompleted(byte[] data, int statusCode, String description, int actionId) {
-			if (requestListener != null) {
-				requestListener.onCompleted(data, statusCode, description, actionId);
-			}
-			if (data != null && statusCode != RequestListener.ERR) {
-				saveCache(context, url, data);
-			}
-		}
-
-		/**
-		 * 保存数据
-		 */
-		private void saveCache(Context context, String url, byte[] data) {
-			try {
-				ByteArrayInputStream inputStream = new ByteArrayInputStream(data);
-				FileOutputStream os = context.openFileOutput(convertFilename(url), Context.MODE_PRIVATE);
-
-				byte[] buffer = new byte[1024];
-				int len = 0;
-				while ((len = inputStream.read(buffer)) > 0) {
-					os.write(buffer, 0, len);
-				}
-
-				os.close();
-				inputStream.close();
-				RequestChacheManager.getInstance(context).update(url, lastModified);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
-	/**
-	 * 网络请求处理
-	 */
-	private class HttpRequestListener extends AsyncHttpResponseHandler {
-		private RequestListener requestListener;
-		private int actionId;
-
-		public HttpRequestListener(RequestListener requestListener, int actionId) {
-			this.requestListener = requestListener;
-			this.actionId = actionId;
-		}
-
-		@Override
-		public void onStart() {
-			super.onStart();
-			requestListener.onStart();
-		}
-
-		@Override
-		protected void onSuccess(int intValue, Header[] headers, byte[] response) {
-			super.onSuccess(intValue, headers, response);
-			requestListener.onCompleted(response, RequestListener.OK, "server response ok", actionId);
-		}
-
-		@Override
-		protected void onFailure(Throwable throwable, String response) {
-			requestListener.onCompleted(null, RequestListener.ERR, response, actionId);
-		}
-	}
-
-	/**
 	 * 检验网络是否有连接，有则true，无则false
 	 * 
 	 * @param context
@@ -431,7 +401,7 @@ public class RequestManager {
 	/**
 	 * 对字符串进行MD5加密。
 	 */
-	public static String convertFilename(String strInput) {
+	private static String convertFilename(String strInput) {
 		StringBuffer buf = null;
 		try {
 			MessageDigest md = MessageDigest.getInstance("MD5");
@@ -453,7 +423,7 @@ public class RequestManager {
 	/**
 	 * 网址汉字编码
 	 */
-	public static String urlEncode(String str) {
+	private static String urlEncode(String str) {
 		StringBuffer buf = new StringBuffer();
 		byte c;
 		byte[] utfBuf;
