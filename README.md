@@ -1,4 +1,4 @@
-An improved Android Asynchronous HTTP Library easy to use!
+Improved Android Asynchronous HTTP Library.
 ====================
 
 基于Android Asynchronous HTTP Library改进版网络加载框架：
