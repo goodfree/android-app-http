@@ -1,5 +1,5 @@
-Improved Android Asynchronous HTTP Library.
-====================
+An improved Android Asynchronous HTTP Library.
+-------------------
 
 基于Android Asynchronous HTTP Library改进版网络加载框架：
 
@@ -8,6 +8,7 @@ Improved Android Asynchronous HTTP Library.
 2.便于JSON-RPC,XML-RPC方式调用。
 
 Android Asynchronous HTTP Library（https://github.com/loopj/android-async-http）
+
 --------------------
 用法：
 
