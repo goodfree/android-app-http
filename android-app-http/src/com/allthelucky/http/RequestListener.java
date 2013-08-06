@@ -1,4 +1,4 @@
-package com.app.library.http;
+package com.allthelucky.http;
 
 /**
  * Request Listener for AsyncHttpResponseHandler
