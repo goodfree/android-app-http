@@ -9,8 +9,9 @@ An improved Android Asynchronous HTTP Library.
 
 Android Asynchronous HTTP Library（https://github.com/loopj/android-async-http）
 
---------------------
+
 用法：
+--------------------
 
     private static final int REQUEST_GET_ID = 0;
 	private static final int REQUEST_POST_ID = 1;
