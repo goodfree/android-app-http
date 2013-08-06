@@ -268,7 +268,6 @@ public class RequestManager {
 						saveCacheResource(context, url, response, lastModified);
 						return null;
 					}
-
 				}.execute();
 			}
 		}
@@ -296,7 +295,6 @@ public class RequestManager {
 		protected byte[] loadCache() {
 			return loadCacheResource(context, url);
 		}
-
 	}
 
 	/**
