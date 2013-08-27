@@ -19,6 +19,7 @@
 package com.loopj.android.http;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -216,7 +217,11 @@ public class AsyncHttpResponseHandler {
 
 	private String getFailureMsg(byte[] msg) {
 		if (msg != null) {
-			return new String("UTF-8");
+			try {
+				return new String(msg,"UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
 		}
 		return null;
 	}
