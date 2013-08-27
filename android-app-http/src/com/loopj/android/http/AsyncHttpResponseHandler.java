@@ -201,7 +201,7 @@ public class AsyncHttpResponseHandler {
 
 		if (status.getStatusCode() >= 300) {
 			sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()),
-					getFailureMsg(responseBody));
+					status.getReasonPhrase());
 		} else {
 			sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody, lastModified);
 		}
