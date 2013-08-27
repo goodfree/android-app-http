@@ -214,15 +214,5 @@ public class AsyncHttpResponseHandler {
 	protected byte[] loadCache() {
 		return null;
 	}
-
-	private String getFailureMsg(byte[] msg) {
-		if (msg != null) {
-			try {
-				return new String(msg, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
-		return null;
-	}
+	
 }
