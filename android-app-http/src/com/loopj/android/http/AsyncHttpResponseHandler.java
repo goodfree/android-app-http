@@ -218,7 +218,7 @@ public class AsyncHttpResponseHandler {
 	private String getFailureMsg(byte[] msg) {
 		if (msg != null) {
 			try {
-				return new String(msg,"UTF-8");
+				return new String(msg, "UTF-8");
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
