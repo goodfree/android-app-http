@@ -63,7 +63,7 @@ public class RequestManager {
 			for (String f : fl) {
 				context.deleteFile(f);
 			}
-			RequestChacheManager.getInstance(context).deletAll();
+			RequestChacheManager.getInstance(context).deleteAll();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -574,7 +574,7 @@ class RequestChacheManager {
 	/**
 	 * delete all records
 	 */
-	public void deletAll() {
+	public void deleteAll() {
 		List<String> all = getUrls();
 		for (String url : all) {
 			SQLiteDatabase database = requestDBHelper.getWritableDatabase();
